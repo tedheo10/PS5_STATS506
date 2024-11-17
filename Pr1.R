@@ -1,4 +1,4 @@
-# Problem 1 
+# Problem 1 - OOP Programming
 # a. Define rational class 
 
 # This code come from the lecture note of STATS 506 

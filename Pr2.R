@@ -1,4 +1,4 @@
-# Problem 2 
+# Problem 2 - plotly
 # a. Regenerate the plot using plotly 
 
 library(ggplot2)

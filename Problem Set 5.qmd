@@ -1,0 +1,448 @@
+---
+title: "Problem Set 5"
+author: "Taeyoung Heo (UMID # 2914 5801)"
+format: 
+  html: 
+    embed-resources: true
+execute:
+  error: true
+---
+
+GitHub repository link : <a href="https://github.com/tedheo10/PS5_STATS506">https://github.com/tedheo10/PS5_STATS506</a>
+
+```{r}
+```
+
+# Problem 1 - OOP Programming
+<b>a.</b> Define rational class 
+
+```{r}
+# This code come from the lecture note of STATS 506 
+
+library(Rcpp)
+
+# call gcd function using c++
+cppFunction("
+int C_gcd(int x, int y) {
+ return  std::gcd(x, y);
+}")
+
+# call lcm function using c++ 
+cppFunction("
+int C_lcm(int x, int y) {
+ return  std::lcm(x, y);
+}")
+
+# Define the Rational class
+setClass("rational",
+         slots = c(numerator = "numeric",
+                   denominator = "numeric"))
+
+#' @title Rational constructor
+#' @param a numerator of rational 
+#' @param b denominator of rational 
+#' @return The rational object
+rational <- function(a,b) {
+                return(new("rational", numerator = a, denominator = b)) 
+            }
+
+# Define a validator 
+setValidity("rational", function(object){
+  if (length(object@numerator) != 1) {
+    stop(paste("numerator should be a numeric value"))
+  }
+  if (length(object@denominator) != 1) {
+    stop(paste("denominator should be a numeric value"))
+  }
+  if (object@denominator == 0) {
+    stop(paste("Denominator should not be zero"))
+  }
+  return(TRUE)
+})
+
+# Define a show method
+setGeneric("show",
+           function(object, ...) {
+             standardGeneric("show")
+           })
+
+setMethod("show", "rational",
+          function(object) {
+            cat(object@numerator, "/", object@denominator, "\n")
+            return(invisible(object))
+          })
+
+# Define a simplify method
+setGeneric("simplify",
+           function(object) {
+             standardGeneric("simplify")
+           })
+
+setMethod("simplify", "rational",
+          function(object) {
+            numerator <- object@numerator
+            denominator <- object@denominator
+            gcd_value <- C_gcd(numerator, denominator)
+            object@numerator <- numerator / gcd_value
+            object@denominator <- denominator / gcd_value 
+            if(numerator == 0) cat(0)
+            else cat(object@numerator, "/", object@denominator, "\n")
+            return(invisible(object))
+            })
+
+# Define a simplify2 method for without any print
+setGeneric("simplify2",
+           function(object) {
+             standardGeneric("simplify2")
+           })
+
+setMethod("simplify2", "rational",
+          function(object) {
+            numerator <- object@numerator
+            denominator <- object@denominator
+            gcd_value <- C_gcd(numerator, denominator)
+            object@numerator <- numerator / gcd_value
+            object@denominator <- denominator / gcd_value 
+            return(invisible(object))
+          })
+
+# Define a quotient method
+setGeneric("quotient",
+           function(object, ...) {
+             standardGeneric("quotient")
+           })
+
+#' A quotient method
+#' @param object A `rational`
+#' @param digits The number of digits after the decimal point  
+#' @return quotient of the `rational`
+setMethod("quotient", "rational",
+          function(object, digits = NULL ) {
+            numerator <- object@numerator
+            denominator <- object@denominator
+            quotient <- numerator/denominator
+            if(!is.null(digits)) {
+              cat(round(numerator/denominator, digits = digits+1))
+            } 
+            else cat(quotient)
+            return(invisible(quotient))
+          })
+
+# Define Addition, subtraction, multiplication, division arithmetic
+
+#' @title `rational` '+' arithmetic.
+#' @param e1 A `rational`
+#' @param e2 A `rational`
+#' @return A `rational` of e1+e2
+setMethod("+", signature(e1 = "rational",
+                         e2 = "rational"),
+          function(e1, e2) {
+            n1 <- e1@numerator
+            d1 <- e1@denominator 
+            n2 <- e2@numerator
+            d2 <- e2@denominator 
+            lcm <- C_lcm(d1, d2)
+            n_plus <- n1*(lcm/d1) + n2*(lcm/d2)
+            d_plus <- lcm 
+            e_plus <- simplify2(rational(n_plus, d_plus))
+            return(invisible(e_plus))
+          })
+
+#' @title `rational` '-' arithmetic.
+#' @param e1 A `rational`
+#' @param e2 A `rational`
+#' @return A `rational` of e1-e2
+setMethod("-", signature(e1 = "rational",
+                         e2 = "rational"),
+          function(e1, e2) {
+            n1 <- e1@numerator
+            d1 <- e1@denominator 
+            n2 <- e2@numerator
+            d2 <- e2@denominator 
+            lcm <- C_lcm(d1, d2)
+            n_minus <- n1*(lcm/d1) - n2*(lcm/d2)
+            d_minus <- lcm 
+            e_minus <- simplify2(rational(n_minus, d_minus))
+            return(invisible(e_minus))
+          })
+
+#' @title `rational` '*' arithmetic.
+#' @param e1 A `rational`
+#' @param e2 A `rational`
+#' @return A `rational` of e1*e2
+setMethod("*", signature(e1 = "rational",
+                         e2 = "rational"),
+          function(e1, e2) {
+            n1 <- e1@numerator
+            d1 <- e1@denominator 
+            n2 <- e2@numerator
+            d2 <- e2@denominator 
+            n_mutiple <- n1*n2
+            d_mutiple <- d1*d2 
+            e_mutiple <- simplify2(rational(n_mutiple, d_mutiple))
+            return(invisible(e_mutiple))
+          })
+
+#' @title `rational` '/' arithmetic.
+#' @param e1 A `rational`
+#' @param e2 A `rational`
+#' @return A `rational` of e1/e2
+setMethod("/", signature(e1 = "rational",
+                         e2 = "rational"),
+          function(e1, e2) {
+            n1 <- e1@numerator
+            d1 <- e1@denominator 
+            n2 <- e2@numerator
+            d2 <- e2@denominator 
+            n_divide <- n1*d2
+            d_divide <- d1*n2 
+            e_divide <- simplify2(rational(n_divide, d_divide))
+            return(invisible(e_divide))
+          })
+```
+
+<b>b.</b> Use the rational class
+
+```{r}
+r1 <- rational(24, 6)
+r2 <- rational(7, 230)
+r3 <- rational(0, 4)
+r1
+r3
+r1 + r2
+r1 - r2
+r1 * r2
+r1 / r2
+r1 + r3
+r1 * r3
+r2 / r3
+quotient(r1)
+quotient(r2)
+quotient(r2, digits = 3)
+quotient(r2, digits = 3.14)
+quotient(r2, digits = "avocado")
+q2 <- quotient(r2, digits = 3)
+q2
+quotient(r3)
+simplify(r1)
+simplify(r2)
+simplify(r3)
+```
+
+<b>c.</b> validator check
+
+```{r}
+a <- 3
+b <- 0
+c <- c(1,0)
+d <- "a"
+
+rational(a,b) # denominator is zero
+rational(a,c) # denominator is not a single value 
+rational(c,a) # numerator is not a single vlaue
+rational(d,a) # numerator is a character
+rational(a,d) # denominator is a character
+rational(d,d) # numerator and denominator are both characters 
+```
+
+## Problem 2 - plotly
+
+<b>a.</b> Regenerate the plot using plotly 
+
+```{r}
+library(ggplot2)
+library(plotly)
+
+# This code is from the problem set 4 solutions of STATS 506 Lecture Note
+
+# Construct variables for the plot for each genre 
+art <- read.csv("df_for_ml_improved_new_market.csv")
+art$Genre___Others[art$Genre___Painting == 1] <- 0
+art$genre <- "Photography"
+art$genre[art$Genre___Print == 1] <- "Print"
+art$genre[art$Genre___Sculpture == 1] <- "Sculpture"
+art$genre[art$Genre___Painting == 1] <- "Painting"
+art$genre[art$Genre___Others == 1] <- "Other"
+
+# set the proportion of each genre in each year
+yeargenre <- with(art, table(year, genre))
+ygperc <- yeargenre/apply(yeargenre, 1, sum)
+ygperc <- ygperc[, c("Painting", "Sculpture", "Photography", "Print", "Other")]
+
+# Set x, y position for each genre 
+xpaint <- ygperc[16,1]/2
+xsculpt <- ygperc[16,2]/2 + ygperc[16,1]
+xphoto <- ygperc[16,3]/2 + sum(ygperc[16,1:2])
+xprint <- ygperc[16, 4]/2 + sum(ygperc[16, 1:3])
+
+# regenerate the plot for the distribution of genre of sales 
+ygpercm <- as.data.frame(ygperc)
+ygpercm$year <- as.factor(ygpercm$year)
+years <- unique(ygpercm$year)
+
+p <- plot_ly(data = ygpercm, x = ~Freq, y = ~year, type = 'bar', name = ~genre,
+             color = ~genre, orientation = 'h') |>
+     layout(title = "Proportion of Genre of Art Sales", 
+            xaxis = list(title = 'Proportion'), 
+            yaxis = list(title = 'year',tickmode = 'array',tickvals = years),
+            barmode = 'stack', showlegend = FALSE) |> 
+     add_annotations(y = 2012, x = xpaint, text = "Paint", showarrow = FALSE,
+                    font = list(color = 'white', size = 12)) |> 
+     add_annotations(y = 2012, x = xsculpt, text = "Sculpt", showarrow = FALSE,
+                    font = list(color = 'white', size = 12)) |> 
+     add_annotations(y = 2012, x = xphoto, text = "Photograph", showarrow = FALSE,
+                    font = list(color = 'white', size = 12))  |> 
+     add_annotations(y = 2012, x = xprint, text = "Print", showarrow = FALSE,
+                    font = list(color = 'white', size = 12)) |>
+     add_segments(y = 2012, yend = 2012, x = 1, xend = 1,
+                  line = list(color = 'white', width = 1)) |>
+     add_annotations(y = 2010.4, x = 1.02, text = "Other", showarrow = FALSE,
+                     textangle = 90, hjust = 0) |>
+     add_annotations(x = 1, y = 2012.2, xref = "x", yref = "y", 
+                  ax = 1.02, ay = 2011, axref = "x", ayref = "y",
+                  arrowhead = 2, arrowsize = 1, arrowwidth = 2, 
+                  showarrow = TRUE, text = "") 
+p
+```
+
+<b>b.</b> Generate an interactive plot with plotly 
+
+```{r}
+# This code is from the problem set 4 solutions of STATS 506 Lecture Note 
+
+#' @title Subset a vector to values above some percentile
+#' @param vec A vector of values
+#' @param percentile A percentile to identify
+select_top_values <- function(vec, percentile) {
+  val <- quantile(vec, percentile)
+  return(vec[vec > val])
+}
+
+# save the top values for each year
+save <- list()
+for (y in unique(art$year)) {
+  prices <- art[art$year == y, "price_usd"]
+  save[[as.character(y)]] <-
+    data.frame(year = y,
+               price_usd = select_top_values(prices, .95))
+}
+arttop <- do.call(rbind, save)
+
+# save the median values for each year
+artmedian <- aggregate(art$price_usd, by = list(art$year),
+                       FUN = median, na.rm = TRUE)
+names(artmedian) <- c("year", "price_usd")
+
+# save the median values for each year and genre
+artmedian2 <- aggregate(art$price_usd, by = list(art$year, art$genre),
+                        FUN = median, na.rm = TRUE)
+names(artmedian2) <- c("year", "genre", "price_usd")
+genres <- rev(unique(artmedian2$genre))
+
+# save the quantile values for each year abd genre
+art975 <- aggregate(art$price_usd, by = list(art$year, art$genre),
+                    FUN = quantile, .975, na.rm = TRUE)
+names(art975) <- c("year", "genre", "price_usd")
+
+# Set a default plotly plot 
+pp <- plot_ly()
+
+# Add a change in the sales price in USD over time
+pp <- pp |> add_trace(data = arttop, x = ~factor(year), y = ~price_usd, 
+                      type = "box", boxpoints = "outliers",
+                      marker = list(color = 'black'), line = list(color = 'black'),
+                      visible = TRUE) |>
+            add_trace(data = artmedian, x = ~factor(year), y = ~price_usd, 
+                      type = "scatter", mode = "lines",
+                      marker = list(color = 'rgba(0,0,0,0)'),
+                      line = list(color = 'red', dash = 'dot', width = 2), 
+                      name = "Median", visible = TRUE)
+
+# Add a change in sales price over time by genre 
+for (i in seq_along(genres)) {
+  genre_data <- artmedian2[artmedian2$genre == genres[i], ]
+  pp <- pp |> add_trace(data = genre_data, x = ~factor(year), y = ~price_usd, 
+                        type = 'scatter', mode = 'lines',
+                        name = paste("Median", genres[i]),
+                        line = list(width = 3),
+                        visible = FALSE)
+}
+for (i in seq_along(genres)) {
+  genre_data <- art975[art975$genre == genres[i], ]
+  pp <- pp |> add_trace(data = genre_data, x = ~factor(year), y = ~price_usd,
+                        type = 'scatter', mode = 'lines',
+                        name = paste("97.5% Percentile", genres[i]),
+                        line = list(width = 3, dash = 'dash'),
+                        visible = FALSE)
+}
+
+# Add update buttons
+pp <- pp |> 
+      layout(updatemenus = list(
+         list(type = "buttons", 
+          buttons = list(
+           list(method = "update", 
+            args = list(
+              list(visible = c(rep(TRUE, 2), rep(FALSE, length(genres) * 2))), 
+              list(title = "Changes in Top 5% of Prices")),
+            label = "Overall"),
+           list(method = "update",
+            args = list(
+              list(visible = c(rep(FALSE, 2), rep(TRUE, length(genres) * 2))), 
+              list(title = "Changes in Price by Genre")),
+            label = "by Genre")
+          ))),
+        xaxis = list(title = "Year"),
+        yaxis = list(title = "Price in USD"),
+        legend = list(x = 0.1, y = 0.9, bgcolor = 'rgba(255, 255, 255, 0)',
+                      bordercolor = 'rgba(0, 0, 0, 0)'))
+pp
+```
+
+## Problem 3 - data.table
+
+```{r}
+library(data.table)
+library(tidyverse)
+library(nycflights13)
+
+# Generate table for mean and median departure delay per origin airport
+flights <- data.table(flights)
+airports <- data.table(airports)
+planes <- data.table(planes)
+
+departure_delay_dt <- flights[, .(mean_delay = mean(dep_delay, na.rm = TRUE),
+                                  med_delay = median(dep_delay, na.rm = TRUE),
+                                  num_flights = .N,
+                                  origin = origin),
+                              by = origin
+                             ][num_flights >= 10
+                             ][airports, on = .(origin = faa), nomatch = NULL
+                             ][, .(name, mean_delay, med_delay)
+                             ][order(-mean_delay)]
+print(departure_delay_dt, nrows = Inf)
+
+# Generate table for mean and median arrival delay per destination airport 
+arrival_delay_dt <- flights[, .(mean_delay = mean(arr_delay, na.rm = TRUE),
+                                med_delay = median(arr_delay, na.rm = TRUE),
+                                num_flights = .N,
+                                dest = dest), 
+                            by = dest
+                           ][num_flights >= 10
+                           ][ , faa := dest
+                           ][ , -c("dest")]
+arrival_delay_dt <- merge(arrival_delay_dt, airports, by = "faa", all.x = TRUE)
+arrival_delay_dt <- arrival_delay_dt[, .(name, mean_delay, med_delay)
+                                    ][order(-mean_delay)]
+print(arrival_delay_dt, nrows = Inf)
+
+# Determine aircraft model with the fastest average speed
+fastest_model_dt <- flights[ , time := air_time / 60
+                           ][ , mph := distance / time
+                           ][planes, on = .(tailnum)
+                           ][ , .(avgmph = mean(mph, na.rm = TRUE), 
+                                  nflights = .N, model), by = model
+                           ][order(-avgmph), .(model, avgmph, nflights)
+                           ][1]
+fastest_model_dt
+```
