@@ -1,8 +1,6 @@
 # Problem 2 - plotly
 # a. Regenerate the plot using plotly 
 
-library(ggplot2)
-library(tidyverse)
 library(plotly)
 
 # This code is from the problem set 4 solutions of STATS 506 Lecture Note 

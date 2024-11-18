@@ -1,7 +1,6 @@
 # Problem 3 - data.table
 
 library(data.table)
-library(tidyverse)
 library(nycflights13)
 
 # Generate table for mean and median departure delay per origin airport
@@ -30,7 +29,8 @@ arrival_delay_dt <- flights[, .(mean_delay = mean(arr_delay, na.rm = TRUE),
                            ][ , faa := dest
                            ][ , -c("dest")]
 arrival_delay_dt <- merge(arrival_delay_dt, airports, by = "faa", all.x = TRUE)
-arrival_delay_dt <- arrival_delay_dt[, .(name, mean_delay, med_delay)
+arrival_delay_dt <- arrival_delay_dt[is.na(name), name := faa
+                                    ][ ,.(name, mean_delay, med_delay), 
                                     ][order(-mean_delay)]
 print(arrival_delay_dt, nrows = Inf)
 

@@ -47,15 +47,11 @@ setValidity("rational", function(object){
 })
 
 # Define a show method
-
-setGeneric("show",
-           function(object, ...) {
-             standardGeneric("show")
-           })
-
 setMethod("show", "rational",
           function(object) {
-            cat(object@numerator, "/", object@denominator, "\n")
+            if(object@numerator==0) cat(0)
+            else if(object@denominator==1) cat(object@numerator)
+            else cat(object@numerator, "/", object@denominator)
             return(invisible(object))
           })
 
@@ -73,27 +69,8 @@ setMethod("simplify", "rational",
             gcd_value <- C_gcd(numerator, denominator)
             object@numerator <- numerator / gcd_value
             object@denominator <- denominator / gcd_value 
-            if(numerator == 0) cat(0)
-            else cat(object@numerator, "/", object@denominator, "\n")
-            return(invisible(object))
+            return(object)
             })
-
-# Define a simplify2 method for without any print
-
-setGeneric("simplify2",
-           function(object) {
-             standardGeneric("simplify2")
-           })
-
-setMethod("simplify2", "rational",
-          function(object) {
-            numerator <- object@numerator
-            denominator <- object@denominator
-            gcd_value <- C_gcd(numerator, denominator)
-            object@numerator <- numerator / gcd_value
-            object@denominator <- denominator / gcd_value 
-            return(invisible(object))
-          })
 
 # Define a quotient method
 
@@ -134,7 +111,7 @@ setMethod("+", signature(e1 = "rational",
             lcm <- C_lcm(d1, d2)
             n_plus <- n1*(lcm/d1) + n2*(lcm/d2)
             d_plus <- lcm 
-            e_plus <- simplify2(rational(n_plus, d_plus))
+            e_plus <- simplify(rational(n_plus, d_plus))
             return(invisible(e_plus))
           })
 
@@ -152,7 +129,7 @@ setMethod("-", signature(e1 = "rational",
             lcm <- C_lcm(d1, d2)
             n_minus <- n1*(lcm/d1) - n2*(lcm/d2)
             d_minus <- lcm 
-            e_minus <- simplify2(rational(n_minus, d_minus))
+            e_minus <- simplify(rational(n_minus, d_minus))
             return(invisible(e_minus))
           })
 
@@ -169,7 +146,7 @@ setMethod("*", signature(e1 = "rational",
             d2 <- e2@denominator 
             n_mutiple <- n1*n2
             d_mutiple <- d1*d2 
-            e_mutiple <- simplify2(rational(n_mutiple, d_mutiple))
+            e_mutiple <- simplify(rational(n_mutiple, d_mutiple))
             return(invisible(e_mutiple))
           })
 
@@ -186,7 +163,7 @@ setMethod("/", signature(e1 = "rational",
             d2 <- e2@denominator 
             n_divide <- n1*d2
             d_divide <- d1*n2 
-            e_divide <- simplify2(rational(n_divide, d_divide))
+            e_divide <- simplify(rational(n_divide, d_divide))
             return(invisible(e_divide))
           })
 
@@ -196,9 +173,7 @@ r1 <- rational(24, 6)
 r2 <- rational(7, 230)
 r3 <- rational(0, 4)
 r1
-show(r1)
 r3
-show(r3)
 r1 + r2
 r1 - r2
 r1 * r2

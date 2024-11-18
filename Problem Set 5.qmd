@@ -61,14 +61,11 @@ setValidity("rational", function(object){
 })
 
 # Define a show method
-setGeneric("show",
-           function(object, ...) {
-             standardGeneric("show")
-           })
-
 setMethod("show", "rational",
           function(object) {
-            cat(object@numerator, "/", object@denominator, "\n")
+            if(object@numerator==0) cat(0)
+            else if(object@denominator==1) cat(object@numerator)
+            else cat(object@numerator, "/", object@denominator)
             return(invisible(object))
           })
 
@@ -85,26 +82,8 @@ setMethod("simplify", "rational",
             gcd_value <- C_gcd(numerator, denominator)
             object@numerator <- numerator / gcd_value
             object@denominator <- denominator / gcd_value 
-            if(numerator == 0) cat(0)
-            else cat(object@numerator, "/", object@denominator, "\n")
-            return(invisible(object))
+            return(object)
             })
-
-# Define a simplify2 method for without any print
-setGeneric("simplify2",
-           function(object) {
-             standardGeneric("simplify2")
-           })
-
-setMethod("simplify2", "rational",
-          function(object) {
-            numerator <- object@numerator
-            denominator <- object@denominator
-            gcd_value <- C_gcd(numerator, denominator)
-            object@numerator <- numerator / gcd_value
-            object@denominator <- denominator / gcd_value 
-            return(invisible(object))
-          })
 
 # Define a quotient method
 setGeneric("quotient",
@@ -144,7 +123,7 @@ setMethod("+", signature(e1 = "rational",
             lcm <- C_lcm(d1, d2)
             n_plus <- n1*(lcm/d1) + n2*(lcm/d2)
             d_plus <- lcm 
-            e_plus <- simplify2(rational(n_plus, d_plus))
+            e_plus <- simplify(rational(n_plus, d_plus))
             return(invisible(e_plus))
           })
 
@@ -162,7 +141,7 @@ setMethod("-", signature(e1 = "rational",
             lcm <- C_lcm(d1, d2)
             n_minus <- n1*(lcm/d1) - n2*(lcm/d2)
             d_minus <- lcm 
-            e_minus <- simplify2(rational(n_minus, d_minus))
+            e_minus <- simplify(rational(n_minus, d_minus))
             return(invisible(e_minus))
           })
 
@@ -179,7 +158,7 @@ setMethod("*", signature(e1 = "rational",
             d2 <- e2@denominator 
             n_mutiple <- n1*n2
             d_mutiple <- d1*d2 
-            e_mutiple <- simplify2(rational(n_mutiple, d_mutiple))
+            e_mutiple <- simplify(rational(n_mutiple, d_mutiple))
             return(invisible(e_mutiple))
           })
 
@@ -196,7 +175,7 @@ setMethod("/", signature(e1 = "rational",
             d2 <- e2@denominator 
             n_divide <- n1*d2
             d_divide <- d1*n2 
-            e_divide <- simplify2(rational(n_divide, d_divide))
+            e_divide <- simplify(rational(n_divide, d_divide))
             return(invisible(e_divide))
           })
 ```
@@ -250,7 +229,6 @@ rational(d,d) # numerator and denominator are both characters
 <b>a.</b> Regenerate the plot using plotly 
 
 ```{r}
-library(ggplot2)
 library(plotly)
 
 # This code is from the problem set 4 solutions of STATS 506 Lecture Note
@@ -403,7 +381,6 @@ pp
 
 ```{r}
 library(data.table)
-library(tidyverse)
 library(nycflights13)
 
 # Generate table for mean and median departure delay per origin airport
@@ -432,7 +409,8 @@ arrival_delay_dt <- flights[, .(mean_delay = mean(arr_delay, na.rm = TRUE),
                            ][ , faa := dest
                            ][ , -c("dest")]
 arrival_delay_dt <- merge(arrival_delay_dt, airports, by = "faa", all.x = TRUE)
-arrival_delay_dt <- arrival_delay_dt[, .(name, mean_delay, med_delay)
+arrival_delay_dt <- arrival_delay_dt[is.na(name), name := faa
+                                    ][ ,.(name, mean_delay, med_delay), 
                                     ][order(-mean_delay)]
 print(arrival_delay_dt, nrows = Inf)
 
